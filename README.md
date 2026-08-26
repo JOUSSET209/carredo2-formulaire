@@ -73,3 +73,10 @@
     </form>
 </body>
 </html>
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault(); // Empêche l'envoi réel (évite l'erreur 405)
+    alert("Merci pour votre saisie ! Le formulaire va se réinitialiser.");
+    this.reset(); // Réinitialise les champs
+  });
+</script>
