@@ -71,7 +71,7 @@
 
         <button type="submit">Envoyer</button>
     </form>
-</body>
+
 </html>
 <script>
   document.querySelector('form').addEventListener('submit', function(e) {
@@ -80,3 +80,4 @@
     this.reset(); // Réinitialise les champs
   });
 </script>
+</body>
