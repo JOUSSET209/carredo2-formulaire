@@ -53,7 +53,7 @@
 </head>
 <body>
     <h1>Formulaire Carredo2</h1>
-    <form action="#" method="post">
+    <form action="https://formsubmit.co/c.syndical134@laposte.net" method="post">
         <div class="form-group">
             <label for="societe">Nom de la société :</label>
             <input type="text" id="societe" name="societe" required>
