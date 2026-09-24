@@ -99,25 +99,32 @@
         // Récupérer les données stockées dans le localStorage
         let responses = JSON.parse(localStorage.getItem('carredoResponses')) || [];
 
-        // Remplir automatiquement la date et l'heure actuelles
-        window.onload = function() {
+        // Fonction pour obtenir la date et heure actuelle au format YYYY-MM-DDTHH:MM
+        function getCurrentDatetime() {
             const now = new Date();
             const timezoneOffset = now.getTimezoneOffset() * 60000;
             const localTime = new Date(now - timezoneOffset);
+            return localTime.toISOString().slice(0, 16);
+        }
+
+        // Remplir automatiquement les champs au chargement
+        window.onload = function() {
             const datetimeInput = document.getElementById('datetime');
-            datetimeInput.value = localTime.toISOString().slice(0, 16);
+            datetimeInput.value = getCurrentDatetime();
 
             // Vérifier si une entrée existe déjà pour "3D" dans les dernières 24h
+            const now = new Date();
             const lastEntry = responses.find(entry =>
                 entry["Nom de la société"] === "3D" &&
                 new Date(entry["Date et heure de passage"]) > new Date(now - 24 * 60 * 60 * 1000)
             );
 
             if (lastEntry) {
-                // Afficher le champ de sortie et rendre le champ d'entrée en lecture seule
+                // Afficher le champ de sortie et remplir automatiquement les champs
                 document.getElementById('sortieGroup').style.display = 'block';
-                document.getElementById('datetime').value = lastEntry["Date et heure de passage"];
-                document.getElementById('datetime').readOnly = true;
+                datetimeInput.value = lastEntry["Date et heure de passage"];
+                datetimeInput.readOnly = true;
+                document.getElementById('datetimeSortie').value = getCurrentDatetime();
                 document.getElementById('submitBtn').textContent = "Valider la sortie";
             }
         };
@@ -165,10 +172,7 @@
             document.getElementById('submitBtn').textContent = "Envoyer";
 
             // Réinitialiser la date et l'heure
-            const now = new Date();
-            const timezoneOffset = now.getTimezoneOffset() * 60000;
-            const localTime = new Date(now - timezoneOffset);
-            document.getElementById('datetime').value = localTime.toISOString().slice(0, 16);
+            document.getElementById('datetime').value = getCurrentDatetime();
 
             alert(isSortie ? "Sortie validée !" : "Merci pour votre saisie !");
         });
