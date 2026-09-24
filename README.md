@@ -59,6 +59,10 @@
         #sortieGroup {
             display: none;
         }
+        input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -79,7 +83,7 @@
 
         <div class="form-group" id="sortieGroup">
             <label for="datetimeSortie">Date et heure de sortie :</label>
-            <input type="datetime-local" id="datetimeSortie" name="datetimeSortie">
+            <input type="datetime-local" id="datetimeSortie" name="datetimeSortie" required>
         </div>
 
         <div class="form-group">
@@ -110,8 +114,10 @@
             );
 
             if (lastEntry) {
-                // Afficher le champ de sortie
+                // Afficher le champ de sortie et rendre le champ d'entrée en lecture seule
                 document.getElementById('sortieGroup').style.display = 'block';
+                document.getElementById('datetime').value = lastEntry["Date et heure de passage"];
+                document.getElementById('datetime').readOnly = true;
                 document.getElementById('submitBtn').textContent = "Valider la sortie";
             }
         };
@@ -155,6 +161,7 @@
             // Réinitialiser le formulaire
             this.reset();
             document.getElementById('sortieGroup').style.display = 'none';
+            document.getElementById('datetime').readOnly = false;
             document.getElementById('submitBtn').textContent = "Envoyer";
 
             // Réinitialiser la date et l'heure
