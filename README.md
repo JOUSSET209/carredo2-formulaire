@@ -1,6 +1,3 @@
-html
-Copier
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -59,6 +56,9 @@ Copier
         #exportBtn:hover {
             background-color: #0b7dda;
         }
+        #sortieGroup {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -73,8 +73,13 @@ Copier
         </div>
 
         <div class="form-group">
-            <label for="datetime">Date et heure de passage :</label>
+            <label for="datetime">Date et heure d'entrée :</label>
             <input type="datetime-local" id="datetime" name="datetime" required>
+        </div>
+
+        <div class="form-group" id="sortieGroup">
+            <label for="datetimeSortie">Date et heure de sortie :</label>
+            <input type="datetime-local" id="datetimeSortie" name="datetimeSortie">
         </div>
 
         <div class="form-group">
@@ -82,11 +87,14 @@ Copier
             <textarea id="commentaires" name="commentaires"></textarea>
         </div>
 
-        <button type="submit">Envoyer</button>
+        <button type="submit" id="submitBtn">Envoyer</button>
         <button type="button" id="exportBtn">Exporter en CSV (Carredo2_Reponses.csv)</button>
     </form>
 
     <script>
+        // Récupérer les données stockées dans le localStorage
+        let responses = JSON.parse(localStorage.getItem('carredoResponses')) || [];
+
         // Remplir automatiquement la date et l'heure actuelles
         window.onload = function() {
             const now = new Date();
@@ -94,31 +102,68 @@ Copier
             const localTime = new Date(now - timezoneOffset);
             const datetimeInput = document.getElementById('datetime');
             datetimeInput.value = localTime.toISOString().slice(0, 16);
-        };
 
-        let responses = [];
+            // Vérifier si une entrée existe déjà pour "3D" dans les dernières 24h
+            const lastEntry = responses.find(entry =>
+                entry["Nom de la société"] === "3D" &&
+                new Date(entry["Date et heure de passage"]) > new Date(now - 24 * 60 * 60 * 1000)
+            );
+
+            if (lastEntry) {
+                // Afficher le champ de sortie
+                document.getElementById('sortieGroup').style.display = 'block';
+                document.getElementById('submitBtn').textContent = "Valider la sortie";
+            }
+        };
 
         document.getElementById('carredoForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const societe = document.getElementById('societe').value;
             const datetime = document.getElementById('datetime').value;
+            const datetimeSortie = document.getElementById('datetimeSortie').value;
             const commentaires = document.getElementById('commentaires').value;
 
-            responses.push({
-                "Nom de la société": societe,
-                "Date et heure de passage": datetime,
-                "Commentaires": commentaires
-            });
+            // Vérifier si c'est une validation de sortie
+            const isSortie = document.getElementById('sortieGroup').style.display === 'block';
 
+            if (isSortie) {
+                // Mettre à jour l'entrée existante avec la date de sortie
+                const now = new Date();
+                const lastEntryIndex = responses.findIndex(entry =>
+                    entry["Nom de la société"] === societe &&
+                    new Date(entry["Date et heure de passage"]) > new Date(now - 24 * 60 * 60 * 1000)
+                );
+
+                if (lastEntryIndex !== -1) {
+                    responses[lastEntryIndex]["Date et heure de sortie"] = datetimeSortie;
+                    responses[lastEntryIndex]["Commentaires"] = commentaires || responses[lastEntryIndex]["Commentaires"];
+                }
+            } else {
+                // Ajouter une nouvelle entrée
+                responses.push({
+                    "Nom de la société": societe,
+                    "Date et heure de passage": datetime,
+                    "Date et heure de sortie": null,
+                    "Commentaires": commentaires
+                });
+            }
+
+            // Sauvegarder dans le localStorage
+            localStorage.setItem('carredoResponses', JSON.stringify(responses));
+
+            // Réinitialiser le formulaire
             this.reset();
-            // Réinitialiser la date et l'heure après soumission
+            document.getElementById('sortieGroup').style.display = 'none';
+            document.getElementById('submitBtn').textContent = "Envoyer";
+
+            // Réinitialiser la date et l'heure
             const now = new Date();
             const timezoneOffset = now.getTimezoneOffset() * 60000;
             const localTime = new Date(now - timezoneOffset);
             document.getElementById('datetime').value = localTime.toISOString().slice(0, 16);
 
-            alert("Merci pour votre saisie ! Les données sont enregistrées localement.");
+            alert(isSortie ? "Sortie validée !" : "Merci pour votre saisie !");
         });
 
         document.getElementById('exportBtn').addEventListener('click', function() {
@@ -127,9 +172,9 @@ Copier
                 return;
             }
 
-            let csv = "Nom de la société,Date et heure de passage,Commentaires\n";
+            let csv = "Nom de la société,Date et heure de passage,Date et heure de sortie,Commentaires\n";
             responses.forEach(function(response) {
-                csv += `"${response["Nom de la société"]}","${response["Date et heure de passage"]}","${response["Commentaires"]}"\n`;
+                csv += `"${response["Nom de la société"]}","${response["Date et heure de passage"]}","${response["Date et heure de sortie"] || ''}","${response["Commentaires"] || ''}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
