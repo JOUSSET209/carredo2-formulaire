@@ -68,10 +68,7 @@ Copier
             <label for="societe">Nom de la société :</label>
             <select id="societe" name="societe" required>
                 <option value="" disabled selected>Sélectionnez une société</option>
-                <option value="Société A">Société A</option>
-                <option value="Société B">Société B</option>
-                <option value="Société C">Société C</option>
-                <option value="Société D">Société D</option>
+                <option value="3D">3D</option>
             </select>
         </div>
 
@@ -93,10 +90,10 @@ Copier
         // Remplir automatiquement la date et l'heure actuelles
         window.onload = function() {
             const now = new Date();
-            const timezoneOffset = now.getTimezoneOffset() * 60000; // Offset en millisecondes
+            const timezoneOffset = now.getTimezoneOffset() * 60000;
             const localTime = new Date(now - timezoneOffset);
             const datetimeInput = document.getElementById('datetime');
-            datetimeInput.value = localTime.toISOString().slice(0, 16); // Format YYYY-MM-DDTHH:MM
+            datetimeInput.value = localTime.toISOString().slice(0, 16);
         };
 
         let responses = [];
