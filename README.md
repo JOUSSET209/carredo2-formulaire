@@ -81,7 +81,7 @@
             <label for="societe">Nom de la société :</label>
             <select id="societe" name="societe" required>
                 <option value="" disabled selected>Sélectionnez une société</option>
-                <option value="3D">3D</option>
+                <option value="TK">TK</option>
             </select>
         </div>
 
