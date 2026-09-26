@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulaire Carredo2</title>
+    <title>Suivi des intervenants extérieurs - MAB Planchon</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,6 +15,14 @@
         h1 {
             color: #333;
             text-align: center;
+            font-size: 24px;
+            margin-bottom: 0;
+        }
+        h2 {
+            color: #555;
+            text-align: center;
+            font-size: 18px;
+            margin-top: 5px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -66,7 +74,8 @@
     </style>
 </head>
 <body>
-    <h1>Formulaire Carredo2</h1>
+    <h1>MAB Planchon</h1>
+    <h2>Suivi des intervenants extérieurs</h2>
     <form id="carredoForm">
         <div class="form-group">
             <label for="societe">Nom de la société :</label>
