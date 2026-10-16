@@ -81,7 +81,7 @@
             <label for="societe">Nom de la société :</label>
             <select id="societe" name="societe" required>
                 <option value="" disabled selected>Sélectionnez une société</option>
-                <option value="TK">TK</option>
+                <option value="3D">3D</option>
             </select>
         </div>
 
@@ -105,9 +105,6 @@
     </form>
 
     <script>
-        // Récupérer les données stockées dans le localStorage
-        let responses = JSON.parse(localStorage.getItem('carredoResponses')) || [];
-
         // Fonction pour obtenir la date et heure actuelle au format YYYY-MM-DDTHH:MM
         function getCurrentDatetime() {
             const now = new Date();
@@ -116,30 +113,56 @@
             return localTime.toISOString().slice(0, 16);
         }
 
-        // Remplir automatiquement les champs au chargement
-        window.onload = function() {
-            const datetimeInput = document.getElementById('datetime');
-            datetimeInput.value = getCurrentDatetime();
+        // Recharger les données depuis le localStorage À CHAQUE affichage
+        function getResponses() {
+            return JSON.parse(localStorage.getItem('carredoResponses')) || [];
+        }
 
-            // Vérifier si une entrée existe déjà pour "3D" dans les dernières 24h
+        // Initialisation du formulaire (appelée à chaque affichage de la page)
+        function initForm() {
+            // Recharger les données les plus récentes depuis le localStorage
+            const responses = getResponses();
+
+            // Remettre le formulaire en état "entrée"
+            document.getElementById('sortieGroup').style.display = 'none';
+            document.getElementById('datetime').readOnly = false;
+            document.getElementById('datetime').value = getCurrentDatetime();
+            document.getElementById('submitBtn').textContent = "Envoyer";
+
+            // Chercher une entrée OUVERTE (sans date de sortie) de moins de 24h
             const now = new Date();
+            const limit24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
             const lastEntry = responses.find(entry =>
                 entry["Nom de la société"] === "3D" &&
-                new Date(entry["Date et heure de passage"]) > new Date(now - 24 * 60 * 60 * 1000)
+                !entry["Date et heure de sortie"] &&
+                new Date(entry["Date et heure de passage"]) > limit24h
             );
 
             if (lastEntry) {
-                // Afficher le champ de sortie et remplir automatiquement les champs
+                // Mode "sortie" : afficher le champ de sortie
                 document.getElementById('sortieGroup').style.display = 'block';
-                datetimeInput.value = lastEntry["Date et heure de passage"];
-                datetimeInput.readOnly = true;
+                document.getElementById('datetime').value = lastEntry["Date et heure de passage"];
+                document.getElementById('datetime').readOnly = true;
                 document.getElementById('datetimeSortie').value = getCurrentDatetime();
                 document.getElementById('submitBtn').textContent = "Valider la sortie";
             }
-        };
+        }
+
+        // Exécuter l'initialisation au chargement ET à chaque ré-affichage de la page
+        // (le "pageshow" corrige le problème du cache sur smartphone lors du 2e scan du QR code)
+        window.addEventListener('load', initForm);
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // La page vient du cache : réinitialiser complètement l'état
+                initForm();
+            }
+        });
 
         document.getElementById('carredoForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
+            // Recharger les données les plus récentes
+            let responses = getResponses();
 
             const societe = document.getElementById('societe').value;
             const datetime = document.getElementById('datetime').value;
@@ -150,16 +173,24 @@
             const isSortie = document.getElementById('sortieGroup').style.display === 'block';
 
             if (isSortie) {
-                // Mettre à jour l'entrée existante avec la date de sortie
+                // Mettre à jour l'entrée ouverte avec la date de sortie
                 const now = new Date();
+                const limit24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
                 const lastEntryIndex = responses.findIndex(entry =>
                     entry["Nom de la société"] === societe &&
-                    new Date(entry["Date et heure de passage"]) > new Date(now - 24 * 60 * 60 * 1000)
+                    !entry["Date et heure de sortie"] &&
+                    new Date(entry["Date et heure de passage"]) > limit24h
                 );
 
                 if (lastEntryIndex !== -1) {
                     responses[lastEntryIndex]["Date et heure de sortie"] = datetimeSortie;
-                    responses[lastEntryIndex]["Commentaires"] = commentaires || responses[lastEntryIndex]["Commentaires"];
+                    if (commentaires) {
+                        responses[lastEntryIndex]["Commentaires"] = commentaires;
+                    }
+                } else {
+                    alert("Erreur : entrée introuvable. Enregistrez une nouvelle entrée.");
+                    initForm();
+                    return;
                 }
             } else {
                 // Ajouter une nouvelle entrée
@@ -174,19 +205,20 @@
             // Sauvegarder dans le localStorage
             localStorage.setItem('carredoResponses', JSON.stringify(responses));
 
-            // Réinitialiser le formulaire
+            // Réinitialiser le formulaire et le remettre en mode "entrée"
             this.reset();
             document.getElementById('sortieGroup').style.display = 'none';
             document.getElementById('datetime').readOnly = false;
             document.getElementById('submitBtn').textContent = "Envoyer";
-
-            // Réinitialiser la date et l'heure
             document.getElementById('datetime').value = getCurrentDatetime();
 
             alert(isSortie ? "Sortie validée !" : "Merci pour votre saisie !");
         });
 
         document.getElementById('exportBtn').addEventListener('click', function() {
+            // Recharger les données les plus récentes
+            const responses = getResponses();
+
             if (responses.length === 0) {
                 alert("Aucune donnée à exporter.");
                 return;
